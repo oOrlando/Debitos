@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Planilha de Dares</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Estilos para o modal de carregamento */
+        #loadingModal {
+            display: none;
+            /* Inicialmente oculto */
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Fundo semitransparente */
+            justify-content: center;
+            align-items: center;
+        }
+
+        #loadingModal .modal-content {
+            color: white;
+            font-size: 24px;
+            padding: 20px;
+            background-color: black;
+            border-radius: 10px;
+            text-align: center;
+            animation: blinkingText 1s infinite;
+            /* Piscar o texto */
+        }
+
+        /* Animação de piscar */
+        @keyframes blinkingText {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Gerar Planilha de Débitos</h1>
+
+    <!-- Formulário para carregar os PDFs -->
+    <form id="pdfForm">
+        <label for="pdfFiles">Escolha arquivos PDF:</label>
+        <input type="file" id="pdfFiles" accept="application/pdf" multiple required>
+        <br><br>
+        <button type="button" onclick="generateExcel()">Gerar Planilha Excel</button>
+    </form>
+
+    <!-- Modal de Carregamento -->
+    <div id="loadingModal">
+        <div class="modal-content">Gerando Planilha...</div>
+    </div>
+
+    <!-- Área para o link de download -->
+    <br>
+    <a id="downloadLink" style="display: none;">Baixar Planilha Excel</a>
+
+    <script>
+        // Função para mostrar o modal de carregamento
+        function showLoadingModal() {
+            document.getElementById('loadingModal').style.display = 'flex';
+        }
+
+        // Função para esconder o modal de carregamento
+        function hideLoadingModal() {
+            document.getElementById('loadingModal').style.display = 'none';
+        }
+        function extrairTextoApartirDeCaractere(str, caracter) {
+            // Encontra o índice do caractere desejado
+            const indice = str.indexOf(caracter);
+
+            // Se o caractere não for encontrado, retorna uma mensagem de erro
+            if (indice === -1) {
+                return 'Caractere não encontrado';
+            }
+
+            // Retorna a substring a partir do caractere encontrado (incluindo o próprio caractere)
+            return str.slice(indice +2);
+        }
+
+        // Função para extrair dados de um PDF
+        async function extractPdfData(pdfData) {
+            const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+            let dataRow = {};
+
+            // Percorre todas as páginas do PDF
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                let cont = 1;
+
+                // Verifica se estamos na página 1 para filtrar os dados
+                if (pageNum === 1) {
+                    const items = textContent.items
+                        .map(item => item.str.trim()) // Remove espaços em branco ao redor
+                        .filter(item => item !== ''); // Ignora itens em branco
+
+                    // Encontrar o índice dos itens-chave e capturar os dados correspondentes
+                    items.forEach((item, index) => {
+                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
+                            dataRow['Placa'] = extrairTextoApartirDeCaractere(items[index + 1], ":");
+
+                        }
+                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
+                            dataRow['Renavam'] = extrairTextoApartirDeCaractere(items[index + 2], ":");
+
+                        }
+                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
+                            dataRow['Marca/Modelo'] = extrairTextoApartirDeCaractere(items[index + 4], ":");
+
+                        }
+                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
+                            dataRow['Chassi'] = extrairTextoApartirDeCaractere(items[index + 7], ":");
+                            cont = 2;
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['Estadia'] = extrairTextoApartirDeCaractere(items[index + 1], ":");                            
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['Guincho'] = extrairTextoApartirDeCaractere(items[index + 2], ":");                            
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['Taxa Liberação'] = extrairTextoApartirDeCaractere(items[index + 3], ":");                            
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['Licenciamento'] = extrairTextoApartirDeCaractere(items[index + 4], ":");                            
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['IPVA'] = extrairTextoApartirDeCaractere(items[index + 5], ":");                            
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['DPVAT'] = extrairTextoApartirDeCaractere(items[index + 6], ":");                            
+                        }                        
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['Multas'] = extrairTextoApartirDeCaractere(items[index + 7], ":");                            
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['Dívida Ativa'] = extrairTextoApartirDeCaractere(items[index + 8], ":");                            
+                        }
+                        if (item.includes("culo") && index + 1 < items.length ) {
+                            dataRow['Total'] = extrairTextoApartirDeCaractere(items[index + 9], ":"); 
+                                                      
+                        }
+                        
+                    });
+                }
+            }
+
+            return dataRow; // Retorna um objeto com os dados extraídos
+        }
+
+        // Função para gerar e baixar a planilha Excel
+        async function generateExcel() {
+            const input = document.getElementById('pdfFiles');
+            const files = input.files;
+            if (files.length === 0) {
+                alert("Por favor, selecione ao menos um arquivo PDF!");
+                return;
+            }
+
+            showLoadingModal(); // Mostrar o modal de carregamento
+
+            let allPdfData = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileReader = new FileReader();
+
+                const pdfData = await new Promise((resolve) => {
+                    fileReader.onload = async function () {
+                        const arrayBuffer = fileReader.result;
+                        const data = await extractPdfData(arrayBuffer); // Extrair dados de cada PDF
+                        if (Object.keys(data).length > 0) { // Apenas adicionar dados não vazios
+                            data['Arquivo'] = file.name; // Adicionar nome do arquivo à linha
+                            resolve(data);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    fileReader.readAsArrayBuffer(file);
+                });
+
+                if (pdfData) {
+                    allPdfData.push(pdfData); // Adicionar os dados extraídos à lista, se não estiver vazio
+                }
+            }
+
+            // Criar uma nova planilha com os dados extraídos de todos os PDFs
+            const worksheet = XLSX.utils.json_to_sheet(allPdfData);
+            const workbook = XLSX.utils.book_new();
+
+            // Adicionar a planilha ao workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'RelatorioDares');
+
+            // Gerar arquivo Excel como binário
+            const excelBinary = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+
+            // Converter para Blob e criar link de download
+            const blob = new Blob([s2ab(excelBinary)], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+
+            // Esconder o modal de carregamento
+            hideLoadingModal();
+
+            // Exibir o link de download
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = url;
+            downloadLink.download = 'debitos.xlsx';
+            downloadLink.style.display = 'inline';
+            downloadLink.textContent = 'Clique aqui para baixar o arquivo Excel';
+        }
+
+        // Função auxiliar para converter string para array buffer
+        function s2ab(s) {
+            const buf = new ArrayBuffer(s.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < s.length; i++) {
+                view[i] = s.charCodeAt(i) & 0xFF;
+            }
+            return buf;
+        }
+    </script>
+
+</body>
+
+</html>
