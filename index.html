@@ -93,7 +93,19 @@
             }
 
             // Retorna a substring a partir do caractere encontrado (incluindo o próprio caractere)
-            return str.slice(indice +2);
+            return str.slice(indice + 2);
+        }
+        function extrairTextoAntesDeCaractere(str, caracter) {
+            // Encontra o índice do caractere desejado
+            const indice = str.indexOf(caracter);
+
+            // Se o caractere não for encontrado, retorna uma mensagem de erro
+            if (indice === -1) {
+                return 'Caractere não encontrado';
+            }
+
+            // Retorna a substring até o índice encontrado (excluindo o caractere)
+            return str.slice(0, indice);
         }
 
         // Função para extrair dados de um PDF
@@ -105,61 +117,59 @@
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 const page = await pdf.getPage(pageNum);
                 const textContent = await page.getTextContent();
-                let cont = 1;
+                
 
                 // Verifica se estamos na página 1 para filtrar os dados
-                if (pageNum === 1) {
+                if (pageNum === 1 || pageNum === 2) {
                     const items = textContent.items
                         .map(item => item.str.trim()) // Remove espaços em branco ao redor
                         .filter(item => item !== ''); // Ignora itens em branco
 
                     // Encontrar o índice dos itens-chave e capturar os dados correspondentes
                     items.forEach((item, index) => {
-                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
-                            dataRow['Placa'] = extrairTextoApartirDeCaractere(items[index + 1], ":");
+                        if (extrairTextoAntesDeCaractere(item, ":") === "Placa" && index + 1 < items.length) {
+                            dataRow['Placa'] = extrairTextoApartirDeCaractere(items[index], ":");
 
                         }
-                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
-                            dataRow['Renavam'] = extrairTextoApartirDeCaractere(items[index + 2], ":");
+                        if (extrairTextoAntesDeCaractere(item, ":") === "Renavam"  && index + 1 < items.length) {
+                            dataRow['Renavam'] = extrairTextoApartirDeCaractere(items[index], ":");
 
                         }
-                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
-                            dataRow['Marca/Modelo'] = extrairTextoApartirDeCaractere(items[index + 4], ":");
+                        if (extrairTextoAntesDeCaractere(item, ":") === "Marca modelo"  && index + 1 < items.length) {
+                            dataRow['Marca/Modelo'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if (extrairTextoAntesDeCaractere(item, ":") === "Chassi"  && index + 1 < items.length) {
+                            dataRow['Chassi'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Taxa de estadia"  && index + 1 < items.length) {
+                            dataRow['Estadia'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Taxa de guinchamento"  && index + 1 < items.length) {
+                            dataRow['Guincho'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Taxa de ofício de liberação"  && index + 1 < items.length) {
+                            dataRow['Taxa Liberação'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Débitos de licenciamento"  && index + 1 < items.length) {
+                            dataRow['Licenciamento'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Débitos de IPVA"  && index + 1 < items.length) {
+                            dataRow['IPVA'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Débitos de DPVAT"  && index + 1 < items.length) {
+                            dataRow['DPVAT'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Débitos de multa"  && index + 1 < items.length) {
+                            dataRow['Multas'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if  (extrairTextoAntesDeCaractere(item, ":") === "Débitos na dívida ativa"  && index + 1 < items.length) {
+                            dataRow['Dívida Ativa'] = extrairTextoApartirDeCaractere(items[index], ":");
+                        }
+                        if (extrairTextoAntesDeCaractere(item, ":") === "Débitos total"  && index + 1 < items.length) {
+                            dataRow['Total'] = extrairTextoApartirDeCaractere(items[index], ":");
 
                         }
-                        if (item.includes("culo") && index + 1 < items.length && cont == 1) {
-                            dataRow['Chassi'] = extrairTextoApartirDeCaractere(items[index + 7], ":");
-                            cont = 2;
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['Estadia'] = extrairTextoApartirDeCaractere(items[index + 1], ":");                            
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['Guincho'] = extrairTextoApartirDeCaractere(items[index + 2], ":");                            
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['Taxa Liberação'] = extrairTextoApartirDeCaractere(items[index + 3], ":");                            
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['Licenciamento'] = extrairTextoApartirDeCaractere(items[index + 4], ":");                            
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['IPVA'] = extrairTextoApartirDeCaractere(items[index + 5], ":");                            
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['DPVAT'] = extrairTextoApartirDeCaractere(items[index + 6], ":");                            
-                        }                        
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['Multas'] = extrairTextoApartirDeCaractere(items[index + 7], ":");                            
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['Dívida Ativa'] = extrairTextoApartirDeCaractere(items[index + 8], ":");                            
-                        }
-                        if (item.includes("culo") && index + 1 < items.length ) {
-                            dataRow['Total'] = extrairTextoApartirDeCaractere(items[index + 9], ":"); 
-                                                      
-                        }
-                        
+
                     });
                 }
             }
